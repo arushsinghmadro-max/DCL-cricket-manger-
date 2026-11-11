@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#101827">
+<link rel="manifest" href="manifest.webmanifest">
+<title>DCL Cricket Manager</title>
+<style>
+:root{--bg:#0b1220;--panel:#151f31;--muted:#9aa9bf;--line:#2a3850;--gold:#f4c34e;--blue:#3388ff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f4f7fb;font:15px system-ui,Arial}
+header{padding:20px 16px;background:linear-gradient(120deg,#101827,#203b63);border-bottom:1px solid var(--line)}
+h1{margin:0;font-size:24px}header p{margin:5px 0 0;color:#c5d1e2}
+nav{display:flex;overflow:auto;gap:8px;padding:10px;background:#101827;position:sticky;top:0;z-index:2}
+nav button,.btn{border:0;border-radius:10px;padding:10px 13px;background:#263750;color:white;font-weight:650;white-space:nowrap}
+nav button.active,.primary{background:var(--gold);color:#18202b}
+main{padding:14px;max-width:900px;margin:auto}.tab{display:none}.tab.active{display:block}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin:0 0 14px}
+h2{font-size:19px;margin:0 0 12px}h3{font-size:16px;margin:0 0 8px}
+label{display:block;color:#c6d2e2;font-size:13px;margin:9px 0 4px}
+input,select{width:100%;padding:11px;border-radius:9px;border:1px solid #40516d;background:#0d1727;color:white;font:inherit}
+.row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.row3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.small{font-size:12px;color:var(--muted)}.stat{font-size:25px;font-weight:800;color:var(--gold)}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:9px 6px;border-bottom:1px solid var(--line)}th{color:#c5d1e2}
+.scroll{overflow:auto}.pill{display:inline-block;padding:4px 8px;border-radius:20px;background:#263750;color:#dce8f8;font-size:12px}
+.notice{color:#f6d98c;font-size:13px}.empty{color:var(--muted);padding:12px 0}
+@media(max-width:520px){.row{grid-template-columns:1fr}.row3{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media print{body{background:white;color:black}header,nav,.no-print{display:none!important}.card{background:white;color:black;border:1px solid #aaa;break-inside:avoid}th,td{border-color:#ccc}}
+</style>
+</head>
+<body>
+<header><h1>🏏 DCL Cricket Manager</h1><p>Tournament stats • Player history • Team leaderboard</p></header>
+<nav id="nav">
+<button class="active" data-tab="dashboard">Dashboard</button><button data-tab="players">Players</button><button data-tab="matches">Add Match</button><button data-tab="history">Match History</button><button data-tab="leaderboard">Leaderboard</button><button data-tab="backup">Backup / PDF</button>
+</nav>
+<main>
+<section id="dashboard" class="tab active">
+<div class="row">
+<div class="card"><div class="small">Orange Cap • Most runs</div><div id="orangeName" class="stat">—</div><div id="orangeRuns" class="small">0 runs</div></div>
+<div class="card"><div class="small">Purple Cap • Most wickets</div><div id="purpleName" class="stat">—</div><div id="purpleWkts" class="small">0 wickets</div></div>
+</div>
+<div class="card"><h2>Tournament overview</h2><div class="row3"><div><div id="totalPlayers" class="stat">0</div><div class="small">Players</div></div><div><div id="totalMatches" class="stat">0</div><div class="small">Matches</div></div><div><div id="totalTeams" class="stat">5</div><div class="small">Teams</div></div></div></div>
+<div class="card"><h2>Top run scorers</h2><div id="topRuns"></div></div>
+<div class="card"><h2>Top wicket takers</h2><div id="topWickets"></div></div>
+</section>
+
+<section id="players" class="tab">
+<div class="card"><h2>Register player</h2>
+<label>Player name</label><input id="pName" placeholder="Player name">
+<label>Team</label><select id="pTeam"></select>
+<div class="actions"><button class="btn primary" onclick="addPlayer()">Add player</button></div>
+</div>
+<div class="card"><h2>Bulk import players</h2><div class="small">One player per line: Player Name, Team Name</div><label>Paste list</label><textarea id="bulk" rows="5" style="width:100%;margin-top:6px;background:#0d1727;color:white;border:1px solid #40516d;border-radius:9px;padding:10px"></textarea><div class="actions"><button class="btn" onclick="bulkImport()">Import list</button></div></div>
+<div class="card"><h2>Registered players</h2><div id="playerList"></div></div>
+</section>
+
+<section id="matches" class="tab">
+<div class="card"><h2>Match details</h2>
+<div class="row"><div><label>Match title</label><input id="mTitle" placeholder="e.g. Match 1"></div><div><label>Date</label><input id="mDate" type="date"></div></div>
+<div class="row"><div><label>Team 1</label><select id="mTeam1"></select></div><div><label>Team 2</label><select id="mTeam2"></select></div></div>
+<p class="notice">Enter each player's match performance below. Save match when all entries are added.</p>
+</div>
+<div class="card"><h2>Player performance</h2>
+<label>Player</label><select id="perfPlayer"></select>
+<div class="row3">
+<div><label>Runs</label><input id="runs" type="number" min="0" value="0"></div>
+<div><label>Balls faced</label><input id="balls" type="number" min="0" value="0"></div>
+<div><label>Fours</label><input id="fours" type="number" min="0" value="0"></div>
+<div><label>Sixes</label><input id="sixes" type="number" min="0" value="0"></div>
+<div><label>Out?</label><select id="out"><option value="yes">Yes</option><option value="no">No</option></select></div>
+<div><label>Overs bowled</label><input id="overs" placeholder="0.0"></div>
+<div><label>Runs conceded</label><input id="conceded" type="number" min="0" value="0"></div>
+<div><label>Wickets</label><input id="wickets" type="number" min="0" value="0"></div>
+<div><label>Maidens</label><input id="maidens" type="number" min="0" value="0"></div>
+</div>
+<div class="actions"><button class="btn" onclick="addPerformance()">Add / update player entry</button></div><div id="pendingList" class="small"></div>
+<div class="actions"><button class="btn primary" onclick="saveMatch()">Save match</button></div>
+</div>
+</section>
+
+<section id="history" class="tab"><div class="card"><h2>Player-wise match history</h2><label>Select player</label><select id="historyPlayer" onchange="renderHistory()"></select><div id="historyList"></div></div><div class="card"><h2>Saved matches</h2><div id="matchList"></div></div></section>
+<section id="leaderboard" class="tab"><div class="card"><h2>Team-wise leaderboard</h2><div id="teamBoard"></div></div><div class="card"><h2>Player statistics</h2><div class="scroll" id="statsTable"></div></div></section>
+<section id="backup" class="tab"><div class="card"><h2>Backup and restore</h2><p class="small">Download a backup regularly. Your records are stored in this browser on this phone.</p><div class="actions"><button class="btn primary" onclick="downloadBackup()">Download JSON backup</button><label class="btn">Restore backup<input type="file" accept="application/json" onchange="restoreBackup(event)" hidden></label></div></div><div class="card"><h2>Save reports as PDF</h2><p class="small">Use your phone's print dialog and choose “Save as PDF”.</p><div class="actions"><button class="btn primary" onclick="window.print()">Print / Save PDF</button></div></div><div class="card"><p class="notice">Data stays on this device/browser. Clearing Chrome site data can delete it. This starter does not sync between phones or calculate ball-by-ball innings totals.</p></div></section>
+</main>
+<script>
+const TEAMS=["Blue Blasters","Golden Kings","Red Rulers","Black Titans","Yellow Riders"];
+const KEY="dcl_cricket_manager_v1";
+let db=JSON.parse(localStorage.getItem(KEY)||'{"players":[],"matches":[]}');
+let pending={};
+const $=id=>document.getElementById(id);
+function save(){localStorage.setItem(KEY,JSON.stringify(db));renderAll()}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function teamOptions(){return TEAMS.map(t=>`<option>${t}</option>`).join('')}
+function fillSelects(){
+["pTeam","mTeam1","mTeam2"].forEach(id=>$(id).innerHTML=teamOptions());
+let opts=db.players.map(p=>`<option value="${esc(p.id)}">${esc(p.name)} — ${esc(p.team)}</option>`).join("");
+$("perfPlayer").innerHTML=opts;$("historyPlayer").innerHTML=opts;
+}
+function addPlayer(){let name=$("pName").value.trim(),team=$("pTeam").value;if(!name)return alert("Enter player name");if(db.players.some(p=>p.name.toLowerCase()===name.toLowerCase()&&p.team===team))return alert("Player already exists in this team");db.players.push({id:crypto.randomUUID(),name,team});$("pName").value="";save()}
+function bulkImport(){let lines=$("bulk").value.split(/\n/);let n=0;lines.forEach(line=>{let [name,...rest]=line.split(",");let team=rest.join(",").trim();name=(name||"").trim();if(name&&TEAMS.includes(team)&&!db.players.some(p=>p.name.toLowerCase()===name.toLowerCase()&&p.team===team)){db.players.push({id:crypto.randomUUID(),name,team});n++}});$("bulk").value="";save();alert(n+" players imported. Team names must match the five team names exactly.")}
+function oversBalls(v){let s=String(v||"0").trim();if(!/^\d+(\.\d)?$/.test(s))return null;let [o,b="0"]=s.split(".").map(Number);if(b>5)return null;return o*6+b}
+function addPerformance(){let id=$("perfPlayer").value;if(!id)return alert("Register players first");let ob=oversBalls($("overs").value);if(ob===null)return alert("Overs format should be like 3.2 (maximum 5 balls after decimal)");pending[id]={playerId:id,runs:+$("runs").value||0,balls:+$("balls").value||0,fours:+$("fours").value||0,sixes:+$("sixes").value||0,out:$("out").value==="yes",oversBalls:ob,oversText:$("overs").value||"0.0",conceded:+$("conceded").value||0,wickets:+$("wickets").value||0,maidens:+$("maidens").value||0};$("pendingList").textContent=Object.keys(pending).length+" player entries ready for this match."}
+function saveMatch(){let title=$("mTitle").value.trim()||"Match "+(db.matches.length+1),date=$("mDate").value||new Date().toISOString().slice(0,10),a=$("mTeam1").value,b=$("mTeam2").value;if(a===b)return alert("Choose two different teams");let entries=Object.values(pending);if(!entries.length)return alert("Add at least one player performance");let invalid=entries.find(e=>{let p=db.players.find(x=>x.id===e.playerId);return !p||![a,b].includes(p.team)});if(invalid)return alert("Every selected player must belong to one of the two match teams");db.matches.push({id:crypto.randomUUID(),title,date,teams:[a,b],entries});pending={};$("mTitle").value="";$("pendingList").textContent="";save();alert("Match saved")}
+function aggregate(){return db.players.map(p=>{let es=db.matches.flatMap(m=>m.entries.filter(e=>e.playerId===p.id));let runs=es.reduce((s,e)=>s+e.runs,0),outs=es.filter(e=>e.out).length,wk=es.reduce((s,e)=>s+e.wickets,0),balls=es.reduce((s,e)=>s+e.balls,0),ob=es.reduce((s,e)=>s+e.oversBalls,0),con=es.reduce((s,e)=>s+e.conceded,0);return {...p,es,runs,outs,wk,balls,ob,con,fours:es.reduce((s,e)=>s+e.fours,0),sixes:es.reduce((s,e)=>s+e.sixes,0),sr:balls?runs/balls*100:0,avg:outs?runs/outs:0,econ:ob?con/(ob/6):0,boundaries:es.reduce((s,e)=>s+e.fours+e.sixes,0),fifties:es.filter(e=>e.runs>=50&&e.runs<100).length,hundreds:es.filter(e=>e.runs>=100).length,fiveW:es.filter(e=>e.wickets>=5).length}})}
+function table(rows,headers){return `<div class="scroll"><table><thead><tr>${headers.map(h=>`<th>${h}</th>`).join("")}</tr></thead><tbody>${rows||""}</tbody></table></div>`}
+function renderAll(){fillSelects();let stats=aggregate();$("totalPlayers").textContent=db.players.length;$("totalMatches").textContent=db.matches.length;
+let byRuns=[...stats].sort((a,b)=>b.runs-a.runs),byW=[...stats].sort((a,b)=>b.wk-a.wk);
+$("orangeName").textContent=byRuns[0]?.runs?byRuns[0].name:"—";$("orangeRuns").textContent=(byRuns[0]?.runs||0)+" runs";
+$("purpleName").textContent=byW[0]?.wk?byW[0].name:"—";$("purpleWkts").textContent=(byW[0]?.wk||0)+" wickets";
+$("topRuns").innerHTML=table(byRuns.slice(0,5).map(p=>`<tr><td>${esc(p.name)}</td><td>${esc(p.team)}</td><td><b>${p.runs}</b></td></tr>`).join(""),["Player","Team","Runs"]);
+$("topWickets").innerHTML=table(byW.slice(0,5).map(p=>`<tr><td>${esc(p.name)}</td><td>${esc(p.team)}</td><td><b>${p.wk}</b></td></tr>`).join(""),["Player","Team","Wickets"]);
+$("playerList").innerHTML=table(db.players.map(p=>`<tr><td>${esc(p.name)}</td><td>${esc(p.team)}</td><td><button class="btn" onclick="removePlayer('${p.id}')">Delete</button></td></tr>`).join(""),["Player","Team",""]);
+let teams=TEAMS.map(t=>{let ps=stats.filter(p=>p.team===t),runs=ps.reduce((s,p)=>s+p.runs,0),w=ps.reduce((s,p)=>s+p.wk,0);return {t,runs,w,players:ps.length}}).sort((a,b)=>b.runs-a.runs);
+$("teamBoard").innerHTML=table(teams.map(x=>`<tr><td>${esc(x.t)}</td><td>${x.players}</td><td>${x.runs}</td><td>${x.w}</td></tr>`).join(""),["Team","Players","Runs","Wickets"]);
+$("statsTable").innerHTML=table(stats.map(p=>`<tr><td>${esc(p.name)}</td><td>${esc(p.team)}</td><td>${p.runs}</td><td>${p.wk}</td><td>${p.avg.toFixed(2)}</td><td>${p.sr.toFixed(1)}</td><td>${p.econ.toFixed(2)}</td><td>${p.fifties}/${p.hundreds}</td></tr>`).join(""),["Player","Team","Runs","Wkts","Avg","SR","Econ","50s/100s"]);
+$("matchList").innerHTML=db.matches.length?db.matches.slice().reverse().map(m=>`<p><b>${esc(m.title)}</b> • ${esc(m.date)}<br><span class="small">${esc(m.teams.join(" vs "))} • ${m.entries.length} player entries</span></p>`).join(""):'<div class="empty">No matches saved yet.</div>';
+renderHistory()}
+function removePlayer(id){if(!confirm("Delete this player and their saved match entries?"))return;db.players=db.players.filter(p=>p.id!==id);db.matches.forEach(m=>m.entries=m.entries.filter(e=>e.playerId!==id));save()}
+function renderHistory(){let id=$("historyPlayer").value,p=db.players.find(x=>x.id===id);if(!p){$("historyList").innerHTML='<div class="empty">Register a player to see history.</div>';return}let rows=db.matches.flatMap(m=>m.entries.filter(e=>e.playerId===id).map(e=>`<tr><td>${esc(m.title)}<br><span class="small">${esc(m.date)}</span></td><td>${e.runs} (${e.balls})</td><td>${e.fours}</td><td>${e.sixes}</td><td>${e.wickets}</td><td>${e.oversText}</td></tr>`));$("historyList").innerHTML=rows.length?table(rows.join(""),["Match","Runs (balls)","4s","6s","Wkts","Overs"]):'<div class="empty">No match entries for this player.</div>'}
+function downloadBackup(){let blob=new Blob([JSON.stringify(db,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="dcl-cricket-backup.json";a.click();URL.revokeObjectURL(a.href)}
+function restoreBackup(ev){let f=ev.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{let d=JSON.parse(r.result);if(!Array.isArray(d.players)||!Array.isArray(d.matches))throw 0;db=d;save();alert("Backup restored")}catch(e){alert("Invalid backup file")}};r.readAsText(f)}
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{document.querySelectorAll("nav button").forEach(x=>x.classList.remove("active"));document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));b.classList.add("active");$(b.dataset.tab).classList.add("active")});
+if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
+renderAll();
+</script>
+</body></html>
