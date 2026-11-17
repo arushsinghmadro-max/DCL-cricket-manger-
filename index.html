@@ -44,6 +44,13 @@ table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;p
 <div class="card"><h2>Tournament overview</h2><div class="row3"><div><div id="totalPlayers" class="stat">0</div><div class="small">Players</div></div><div><div id="totalMatches" class="stat">0</div><div class="small">Matches</div></div><div><div id="totalTeams" class="stat">5</div><div class="small">Teams</div></div></div></div>
 <div class="card"><h2>Top run scorers</h2><div id="topRuns"></div></div>
 <div class="card"><h2>Top wicket takers</h2><div id="topWickets"></div></div>
+ <div class="card"><h2>Most sixes</h2><div id="topSixes"></div></div>
+ <div class="card"><h2>Most fours</h2><div id="topFours"></div></div>
+ <div class="card"><h2>Best batting average</h2><div id="topBatAvg"></div></div>
+ <div class="card"><h2>Best strike rate</h2><div id="topStrikeRate"></div></div>
+ <div class="card"><h2>Best bowling economy</h2><div id="topEconomy"></div></div>
+ <div class="card"><h2>Best bowling figures</h2><div id="topBowlingFigures"></div></div>
+ <div class="card"><h2>Best bowling average</h2><div id="topBowlingAverage"></div></div>
 </section>
 
 <section id="players" class="tab">
@@ -103,7 +110,10 @@ function bulkImport(){let lines=$("bulk").value.split(/\n/);let n=0;lines.forEac
 function oversBalls(v){let s=String(v||"0").trim();if(!/^\d+(\.\d)?$/.test(s))return null;let [o,b="0"]=s.split(".").map(Number);if(b>5)return null;return o*6+b}
 function addPerformance(){let id=$("perfPlayer").value;if(!id)return alert("Register players first");let ob=oversBalls($("overs").value);if(ob===null)return alert("Overs format should be like 3.2 (maximum 5 balls after decimal)");pending[id]={playerId:id,runs:+$("runs").value||0,balls:+$("balls").value||0,fours:+$("fours").value||0,sixes:+$("sixes").value||0,out:$("out").value==="yes",oversBalls:ob,oversText:$("overs").value||"0.0",conceded:+$("conceded").value||0,wickets:+$("wickets").value||0,maidens:+$("maidens").value||0};$("pendingList").textContent=Object.keys(pending).length+" player entries ready for this match."}
 function saveMatch(){let title=$("mTitle").value.trim()||"Match "+(db.matches.length+1),date=$("mDate").value||new Date().toISOString().slice(0,10),a=$("mTeam1").value,b=$("mTeam2").value;if(a===b)return alert("Choose two different teams");let entries=Object.values(pending);if(!entries.length)return alert("Add at least one player performance");let invalid=entries.find(e=>{let p=db.players.find(x=>x.id===e.playerId);return !p||![a,b].includes(p.team)});if(invalid)return alert("Every selected player must belong to one of the two match teams");db.matches.push({id:crypto.randomUUID(),title,date,teams:[a,b],entries});pending={};$("mTitle").value="";$("pendingList").textContent="";save();alert("Match saved")}
-function aggregate(){return db.players.map(p=>{let es=db.matches.flatMap(m=>m.entries.filter(e=>e.playerId===p.id));let runs=es.reduce((s,e)=>s+e.runs,0),outs=es.filter(e=>e.out).length,wk=es.reduce((s,e)=>s+e.wickets,0),balls=es.reduce((s,e)=>s+e.balls,0),ob=es.reduce((s,e)=>s+e.oversBalls,0),con=es.reduce((s,e)=>s+e.conceded,0);return {...p,es,runs,outs,wk,balls,ob,con,fours:es.reduce((s,e)=>s+e.fours,0),sixes:es.reduce((s,e)=>s+e.sixes,0),sr:balls?runs/balls*100:0,avg:outs?runs/outs:0,econ:ob?con/(ob/6):0,boundaries:es.reduce((s,e)=>s+e.fours+e.sixes,0),fifties:es.filter(e=>e.runs>=50&&e.runs<100).length,hundreds:es.filter(e=>e.runs>=100).length,fiveW:es.filter(e=>e.wickets>=5).length}})}
+function aggregate(){return db.players.map(p=>{let es=db.matches.flatMap(m=>m.entries.filter(e=>e.playerId===p.id));let runs=es.reduce((s,e)=>s+e.runs,0),outs=es.filter(e=>e.out).length,wk=es.reduce((s,e)=>s+e.wickets,0),balls=es.reduce((s,e)=>s+e.balls,0),ob=es.reduce((s,e)=>s+e.oversBalls,0),con=es.reduce((s,e)=>s+e.conceded,0);return {...p,es,runs,outs,wk,balls,ob,con,fours:es.reduce((s,e)=>s+e.fours,0),sixes:es.reduce((s,e)=>s+e.sixes,0),sr:balls?runs/balls*100:0,avg:outs?runs/outs:0,econ:ob?con/(ob/6):0,boundaries:es.reduce((s,e)=>s+e.fours+e.sixes,0),fifties:es.filter(e=>e.runs>=50&&e.runs<100).length,hundreds:es.filter(e=>e.runs>=100).length,fiveW:es.filter(e=>e.wickets>=5).length,
+ bowlAvg:wk?con/wk:null,
+ bestFigure:(()=>{let candidates=db.matches.flatMap(m=>m.entries.filter(e=>e.playerId===p.id&&e.wickets>0).map(e=>({...e,matchTitle:m.title})));return candidates.sort((a,b)=>b.wickets-a.wickets||a.conceded-b.conceded)[0]||null})()
+}})}
 function table(rows,headers){return `<div class="scroll"><table><thead><tr>${headers.map(h=>`<th>${h}</th>`).join("")}</tr></thead><tbody>${rows||""}</tbody></table></div>`}
 function renderAll(){fillSelects();let stats=aggregate();$("totalPlayers").textContent=db.players.length;$("totalMatches").textContent=db.matches.length;
 let byRuns=[...stats].sort((a,b)=>b.runs-a.runs),byW=[...stats].sort((a,b)=>b.wk-a.wk);
@@ -111,6 +121,20 @@ $("orangeName").textContent=byRuns[0]?.runs?byRuns[0].name:"—";$("orangeRuns")
 $("purpleName").textContent=byW[0]?.wk?byW[0].name:"—";$("purpleWkts").textContent=(byW[0]?.wk||0)+" wickets";
 $("topRuns").innerHTML=table(byRuns.slice(0,5).map(p=>`<tr><td>${esc(p.name)}</td><td>${esc(p.team)}</td><td><b>${p.runs}</b></td></tr>`).join(""),["Player","Team","Runs"]);
 $("topWickets").innerHTML=table(byW.slice(0,5).map(p=>`<tr><td>${esc(p.name)}</td><td>${esc(p.team)}</td><td><b>${p.wk}</b></td></tr>`).join(""),["Player","Team","Wickets"]);
+ let bySixes=[...stats].filter(p=>p.sixes>0).sort((a,b)=>b.sixes-a.sixes);
+ let byFours=[...stats].filter(p=>p.fours>0).sort((a,b)=>b.fours-a.fours);
+ let byBatAvg=[...stats].filter(p=>p.outs>0).sort((a,b)=>b.avg-a.avg);
+ let bySR=[...stats].filter(p=>p.balls>0).sort((a,b)=>b.sr-a.sr);
+ let byEcon=[...stats].filter(p=>p.ob>0).sort((a,b)=>a.econ-b.econ);
+ let byFigures=[...stats].filter(p=>p.bestFigure).sort((a,b)=>b.bestFigure.wickets-a.bestFigure.wickets||a.bestFigure.conceded-b.bestFigure.conceded);
+ let byBowlAvg=[...stats].filter(p=>p.bowlAvg!==null).sort((a,b)=>a.bowlAvg-b.bowlAvg);
+ $("topSixes").innerHTML=table(bySixes.slice(0,5).map(p=>`<tr><td>${esc(p.name)}</td><td>${esc(p.team)}</td><td><b>${p.sixes}</b></td></tr>`).join(""),["Player","Team","Sixes"]);
+ $("topFours").innerHTML=table(byFours.slice(0,5).map(p=>`<tr><td>${esc(p.name)}</td><td>${esc(p.team)}</td><td><b>${p.fours}</b></td></tr>`).join(""),["Player","Team","Fours"]);
+ $("topBatAvg").innerHTML=table(byBatAvg.slice(0,5).map(p=>`<tr><td>${esc(p.name)}</td><td>${esc(p.team)}</td><td><b>${p.avg.toFixed(2)}</b></td></tr>`).join(""),["Player","Team","Average"]);
+ $("topStrikeRate").innerHTML=table(bySR.slice(0,5).map(p=>`<tr><td>${esc(p.name)}</td><td>${esc(p.team)}</td><td><b>${p.sr.toFixed(1)}</b></td></tr>`).join(""),["Player","Team","Strike rate"]);
+ $("topEconomy").innerHTML=table(byEcon.slice(0,5).map(p=>`<tr><td>${esc(p.name)}</td><td>${esc(p.team)}</td><td><b>${p.econ.toFixed(2)}</b></td></tr>`).join(""),["Player","Team","Economy"]);
+ $("topBowlingFigures").innerHTML=table(byFigures.slice(0,5).map(p=>`<tr><td>${esc(p.name)}</td><td>${esc(p.team)}</td><td><b>${p.bestFigure.wickets}/${p.bestFigure.conceded}</b></td><td>${esc(p.bestFigure.matchTitle||"Best match")}</td></tr>`).join(""),["Player","Team","Figures","Match"]);
+ $("topBowlingAverage").innerHTML=table(byBowlAvg.slice(0,5).map(p=>`<tr><td>${esc(p.name)}</td><td>${esc(p.team)}</td><td><b>${p.bowlAvg.toFixed(2)}</b></td></tr>`).join(""),["Player","Team","Average"]);
 $("playerList").innerHTML=table(db.players.map(p=>`<tr><td>${esc(p.name)}</td><td>${esc(p.team)}</td><td><button class="btn" onclick="removePlayer('${p.id}')">Delete</button></td></tr>`).join(""),["Player","Team",""]);
 let teams=TEAMS.map(t=>{let ps=stats.filter(p=>p.team===t),runs=ps.reduce((s,p)=>s+p.runs,0),w=ps.reduce((s,p)=>s+p.wk,0);return {t,runs,w,players:ps.length}}).sort((a,b)=>b.runs-a.runs);
 $("teamBoard").innerHTML=table(teams.map(x=>`<tr><td>${esc(x.t)}</td><td>${x.players}</td><td>${x.runs}</td><td>${x.w}</td></tr>`).join(""),["Team","Players","Runs","Wickets"]);
