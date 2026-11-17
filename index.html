@@ -44,13 +44,7 @@ table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;p
 <div class="card"><h2>Tournament overview</h2><div class="row3"><div><div id="totalPlayers" class="stat">0</div><div class="small">Players</div></div><div><div id="totalMatches" class="stat">0</div><div class="small">Matches</div></div><div><div id="totalTeams" class="stat">5</div><div class="small">Teams</div></div></div></div>
 <div class="card"><h2>Top run scorers</h2><div id="topRuns"></div></div>
 <div class="card"><h2>Top wicket takers</h2><div id="topWickets"></div></div>
- <div class="card"><h2>Most sixes</h2><div id="topSixes"></div></div>
- <div class="card"><h2>Most fours</h2><div id="topFours"></div></div>
- <div class="card"><h2>Best batting average</h2><div id="topBatAvg"></div></div>
- <div class="card"><h2>Best strike rate</h2><div id="topStrikeRate"></div></div>
- <div class="card"><h2>Best bowling economy</h2><div id="topEconomy"></div></div>
- <div class="card"><h2>Best bowling figures</h2><div id="topBowlingFigures"></div></div>
- <div class="card"><h2>Best bowling average</h2><div id="topBowlingAverage"></div></div>
+
 </section>
 
 <section id="players" class="tab">
@@ -88,7 +82,13 @@ table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;p
 </section>
 
 <section id="history" class="tab"><div class="card"><h2>Player-wise match history</h2><label>Select player</label><select id="historyPlayer" onchange="renderHistory()"></select><div id="historyList"></div></div><div class="card"><h2>Saved matches</h2><div id="matchList"></div></div></section>
-<section id="leaderboard" class="tab"><div class="card"><h2>Team-wise leaderboard</h2><div id="teamBoard"></div></div><div class="card"><h2>Player statistics</h2><div class="scroll" id="statsTable"></div></div></section>
+<section id="leaderboard" class="tab"> <div class="card"><h2>Most sixes</h2><div id="topSixes"></div></div>
+ <div class="card"><h2>Most fours</h2><div id="topFours"></div></div>
+ <div class="card"><h2>Best batting average</h2><div id="topBatAvg"></div></div>
+ <div class="card"><h2>Best strike rate</h2><div id="topStrikeRate"></div></div>
+ <div class="card"><h2>Best bowling economy</h2><div id="topEconomy"></div></div>
+ <div class="card"><h2>Best bowling figures</h2><div id="topBowlingFigures"></div></div>
+ <div class="card"><h2>Best bowling average</h2><div id="topBowlingAverage"></div></div><div class="card"><h2>Team-wise leaderboard</h2><div id="teamBoard"></div></div><div class="card"><h2>Player statistics</h2><div class="scroll" id="statsTable"></div></div></section>
 <section id="backup" class="tab"><div class="card"><h2>Backup and restore</h2><p class="small">Download a backup regularly. Your records are stored in this browser on this phone.</p><div class="actions"><button class="btn primary" onclick="downloadBackup()">Download JSON backup</button><label class="btn">Restore backup<input type="file" accept="application/json" onchange="restoreBackup(event)" hidden></label></div></div><div class="card"><h2>Save reports as PDF</h2><p class="small">Use your phone's print dialog and choose “Save as PDF”.</p><div class="actions"><button class="btn primary" onclick="window.print()">Print / Save PDF</button></div></div><div class="card"><p class="notice">Data stays on this device/browser. Clearing Chrome site data can delete it. This starter does not sync between phones or calculate ball-by-ball innings totals.</p></div></section>
 </main>
 <script>
